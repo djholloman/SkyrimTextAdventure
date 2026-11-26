@@ -47,7 +47,8 @@ class Game:
             "gold": s["gold"], "inventory": s["inventory"], "spells": s["spells"],
             "shouts": s["shouts"], "companion": s["companion"],
             "location": s["location"], "quests": s["quests"],
-            "enemy": s["enemy"], "game_over": s["stage"] == "game_over",
+            "enemy": s["enemy"], "ending_title": s.get("ending_title"),
+            "game_over": s["stage"] == "game_over",
             "won": s["stage"] == "ending"
         }
 

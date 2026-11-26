@@ -164,6 +164,11 @@ class MiscFixTests(unittest.TestCase):
         g2 = Game(json.loads(g.export_state()))
         self.assertIn("run", ids(g2))
 
+    def test_ending_title_is_exposed_to_the_ui(self):
+        g = new_game(); g.s["stormcloaks"] = True; g._advance("ending")
+        self.assertEqual(g.result()["state"]["ending_title"], "THE LIBERATOR OF SKYRIM")
+        self.assertIsNone(new_game().state()["ending_title"])
+
     def test_full_playthrough_reaches_an_ending(self):
         g = new_game()
         g.act("ralof")
