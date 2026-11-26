@@ -19,6 +19,7 @@ This edition runs the Python game engine in the visitor's browser using Pyodide.
 - `game.py` — Python game engine, executed by Pyodide
 - `static/style.css` — Nordic-inspired responsive RPG styling
 - `static/game.js` — browser controls and Pyodide bridge
+- `static/portraits/` — character badge images for each race × class combination (Nord / High Elf / Khajiit × Warrior / Mage / Thief)
 
 ## Notes
 
