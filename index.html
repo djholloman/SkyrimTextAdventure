@@ -36,7 +36,7 @@
       <h2>Who are you, prisoner?</h2>
       <p class="muted">The cart rolls toward Helgen. Before the executioner's block, the scribe asks your name.</p>
       <div class="setup-preview">
-        <img id="setupPortrait" class="setup-badge" src="static/portraits/nord_warrior.png" alt="Selected character">
+        <img id="setupPortrait" class="setup-badge" src="static/nord_warrior.png" alt="Selected character">
         <div class="setup-preview-meta">
           <span id="setupRaceClass">Nord · Warrior</span>
           <small id="raceNote">Nords begin with greater health and defense.</small>
@@ -64,7 +64,7 @@
     <section id="game" class="game-layout hidden">
       <aside class="sidebar">
         <div class="panel portrait">
-          <img id="charPortrait" class="avatar" src="static/portraits/nord_warrior.png" alt="Character portrait">
+          <img id="charPortrait" class="avatar" src="static/nord_warrior.png" alt="Character portrait">
           <p class="eyebrow">THE DRAGONBORN</p>
           <h2 id="charName">Dragonborn</h2>
           <p id="charMeta" class="muted">Nord · Warrior</p>
@@ -85,7 +85,16 @@
           </div>
         </div>
         <div class="panel inventory">
-          <h3>INVENTORY</h3>
+          <h3>SKILLS</h3>
+          <div class="skill-grid" id="skillGrid">
+            <div><small>ONE-HANDED</small><b id="skillOneHanded">15</b></div>
+            <div><small>DESTRUCTION</small><b id="skillDestruction">15</b></div>
+            <div><small>SNEAK</small><b id="skillSneak">15</b></div>
+            <div><small>SPEECH</small><b id="skillSpeech">15</b></div>
+          </div>
+          <h3 class="subhead">PERKS <span id="perkPointsBadge" class="perk-badge hidden">0</span></h3>
+          <p id="perkList" class="small-list">None</p>
+          <h3 class="subhead">INVENTORY</h3>
           <ul id="inventoryList"></ul>
           <h3 class="subhead">KNOWN MAGIC</h3>
           <p id="magicList" class="small-list">Flames</p>

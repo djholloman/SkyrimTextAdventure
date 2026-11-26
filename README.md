@@ -19,7 +19,7 @@ This edition runs the Python game engine in the visitor's browser using Pyodide.
 - `game.py` — Python game engine, executed by Pyodide
 - `static/style.css` — Nordic-inspired responsive RPG styling
 - `static/game.js` — browser controls and Pyodide bridge
-- `static/portraits/` — character badge images for each race × class combination (Nord / High Elf / Khajiit × Warrior / Mage / Thief)
+- `static/*_*.png` — character badge images for each race × class combination (e.g. `nord_warrior.png`)
 
 ## Notes
 
@@ -28,6 +28,24 @@ This edition runs the Python game engine in the visitor's browser using Pyodide.
 - GitHub Pages serves static files. No secrets, API keys, or server-side Python are needed.
 - This is an adaptation of the supplied console game into a browser-choice interface. The original game used synchronous `input()`/`print()` loops; the browser edition uses discrete Python game actions and choice buttons.
 - The game is a fan-made text adventure and is not affiliated with or endorsed by Bethesda Softworks.
+
+## Character badges
+
+The sidebar and character-creation screen show a portrait badge for each race × class combination (Nord / High Elf / Khajiit × Warrior / Mage / Thief). Images live directly in `static/` (for example `static/nord_warrior.png`).
+
+## Skills & perks
+
+Four skills track progress: **One-Handed**, **Destruction**, **Sneak**, and **Speech**.
+
+- Class starting bonuses: Warrior → One-Handed 25 · Mage → Destruction 25 · Thief → Sneak 25 & Speech 25
+- Weapon attacks improve One-Handed; spells improve Destruction; successful escapes and sneaking improve Sneak; shop deals improve Speech
+- Each level-up grants **1 perk point**
+- Perks (require skill 20 + a perk point):
+  - **Armsman** — +5 weapon damage
+  - **Pyromancer** — +10 spell damage
+  - **Shadowfoot** — +20% escape chance
+
+Skills and unlocked perks appear in the sidebar. Spend perk points from Riverwood or the branching path menu.
 
 
 ## QA fixes and regression tests
