@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11151a">
+  <title>Skyrim — The Chronicles of the Dragonborn</title>
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="grain"></div>
+  <main class="shell">
+    <header class="masthead">
+      <div class="sigil">ᛟ</div>
+      <div>
+        <p class="eyebrow">AN UNOFFICIAL TEXT-BASED ADVENTURE</p>
+        <h1>THE CHRONICLES <span>OF THE DRAGONBORN</span></h1>
+        <p class="subtitle">A saga of Skyrim · steel · sorcery · fate</p>
+      </div>
+      <div class="header-actions">
+        <button id="saveBtn" class="quiet" disabled>Save</button>
+        <button id="loadBtn" class="quiet" disabled>Load</button>
+      </div>
+    </header>
+
+    <section id="loading" class="loading-panel">
+      <div class="rune-spinner">ᚠ</div>
+      <h2>Awakening the ancient words...</h2>
+      <p>Loading the Python game engine into your browser.</p>
+      <div class="load-track"><span></span></div>
+      <small id="loadStatus">Preparing Pyodide</small>
+    </section>
+
+    <section id="setup" class="panel setup hidden">
+      <p class="eyebrow">CHARACTER CREATION</p>
+      <h2>Who are you, prisoner?</h2>
+      <p class="muted">The cart rolls toward Helgen. Before the executioner's block, the scribe asks your name.</p>
+      <div class="setup-preview">
+        <img id="setupPortrait" class="setup-badge" src="static/portraits/nord_warrior.png" alt="Selected character">
+        <div class="setup-preview-meta">
+          <span id="setupRaceClass">Nord · Warrior</span>
+          <small id="raceNote">Nords begin with greater health and defense.</small>
+        </div>
+      </div>
+      <label for="playerName">Name</label>
+      <input id="playerName" maxlength="24" value="Dragonborn" autocomplete="off">
+      <div class="choice-grid">
+        <div>
+          <label for="race">Race</label>
+          <select id="race">
+            <option>Nord</option><option>High Elf</option><option>Khajiit</option>
+          </select>
+        </div>
+        <div>
+          <label for="class">Class</label>
+          <select id="class">
+            <option>Warrior</option><option>Mage</option><option>Thief</option>
+          </select>
+        </div>
+      </div>
+      <button id="beginBtn" class="primary">Begin your saga <span>→</span></button>
+    </section>
+
+    <section id="game" class="game-layout hidden">
+      <aside class="sidebar">
+        <div class="panel portrait">
+          <img id="charPortrait" class="avatar" src="static/portraits/nord_warrior.png" alt="Character portrait">
+          <p class="eyebrow">THE DRAGONBORN</p>
+          <h2 id="charName">Dragonborn</h2>
+          <p id="charMeta" class="muted">Nord · Warrior</p>
+          <div class="level-row"><span>LEVEL <b id="level">1</b></span><span><b id="xp">0</b> / <span id="xpNeeded">100</span> XP</span></div>
+          <div class="xpbar"><i id="xpBar"></i></div>
+        </div>
+        <div class="panel stats">
+          <h3>VITALS</h3>
+          <div class="meter-label"><span>Health</span><b id="hpText">100 / 100</b></div>
+          <div class="meter health"><i id="hpBar"></i></div>
+          <div class="meter-label"><span>Magicka</span><b id="manaText">50 / 50</b></div>
+          <div class="meter mana"><i id="manaBar"></i></div>
+          <div class="stat-grid">
+            <div><small>ATTACK</small><b id="attack">15</b></div>
+            <div><small>SPELL</small><b id="spell">10</b></div>
+            <div><small>DEFENSE</small><b id="defense">5</b></div>
+            <div><small>SEPTIMS</small><b id="gold">50</b></div>
+          </div>
+        </div>
+        <div class="panel inventory">
+          <h3>INVENTORY</h3>
+          <ul id="inventoryList"></ul>
+          <h3 class="subhead">KNOWN MAGIC</h3>
+          <p id="magicList" class="small-list">Flames</p>
+          <h3 class="subhead">ACTIVE COMPANION</h3>
+          <p id="companion" class="small-list">None</p>
+        </div>
+      </aside>
+
+      <section class="main-column">
+        <div class="location-bar"><span class="location-icon">⌖</span><span id="location">HELGEN</span><span class="location-rule"></span><span class="location-tag">THE PROVINCE OF SKYRIM</span></div>
+        <div class="panel story-panel">
+          <div class="story-heading"><div><p class="eyebrow">YOUR STORY UNFOLDS</p><h2 id="sceneTitle">The beginning</h2></div><span class="ornament">✧</span></div>
+          <div id="storyLog" class="story-log" aria-live="polite"></div>
+          <div id="enemyPanel" class="enemy-panel hidden">
+            <div class="enemy-heading"><span>⚔</span><b id="enemyName">Enemy</b><strong id="enemyHpText">40 / 40</strong></div>
+            <div class="meter enemy"><i id="enemyHpBar"></i></div>
+          </div>
+          <div class="choices-heading"><span>YOUR NEXT MOVE</span><i></i></div>
+          <div id="choices" class="choices"></div>
+          <div id="endingPanel" class="ending-panel hidden"></div>
+        </div>
+        <footer class="game-footer"><span>ᛟ SKYRIM · THE CHRONICLES OF THE DRAGONBORN</span><span>YOUR CHOICES SHAPE YOUR LEGEND</span></footer>
+      </section>
+    </section>
+    <div id="toast" class="toast" role="status"></div>
+    <footer class="site-footer">A fan-made text adventure. Not affiliated with or endorsed by Bethesda Softworks.</footer>
+  </main>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+  <script src="static/game.js"></script>
+</body>
+</html>
