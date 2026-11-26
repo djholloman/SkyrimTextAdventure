@@ -35,6 +35,13 @@
       <p class="eyebrow">CHARACTER CREATION</p>
       <h2>Who are you, prisoner?</h2>
       <p class="muted">The cart rolls toward Helgen. Before the executioner's block, the scribe asks your name.</p>
+      <div class="setup-preview">
+        <img id="setupPortrait" class="setup-badge" src="static/portraits/nord_warrior.png" alt="Selected character">
+        <div class="setup-preview-meta">
+          <span id="setupRaceClass">Nord · Warrior</span>
+          <small id="raceNote">Nords begin with greater health and defense.</small>
+        </div>
+      </div>
       <label for="playerName">Name</label>
       <input id="playerName" maxlength="24" value="Dragonborn" autocomplete="off">
       <div class="choice-grid">
@@ -51,14 +58,13 @@
           </select>
         </div>
       </div>
-      <div class="race-note" id="raceNote">Nords begin with greater health and defense.</div>
       <button id="beginBtn" class="primary">Begin your saga <span>→</span></button>
     </section>
 
     <section id="game" class="game-layout hidden">
       <aside class="sidebar">
         <div class="panel portrait">
-          <div class="avatar">ᛉ</div>
+          <img id="charPortrait" class="avatar" src="static/portraits/nord_warrior.png" alt="Character portrait">
           <p class="eyebrow">THE DRAGONBORN</p>
           <h2 id="charName">Dragonborn</h2>
           <p id="charMeta" class="muted">Nord · Warrior</p>
