@@ -3,10 +3,13 @@ const $ = id => document.getElementById(id);
 // Convert Python return values into ordinary JavaScript values before rendering
 // or passing them to browser APIs. Destroy temporary PyProxy objects afterwards.
 function fromPython(proxy, options){
+  // Python strings/numbers arrive as plain JS values (no toJs/destroy); only dicts,
+  // lists and objects arrive as PyProxy objects that need converting.
+  if(!proxy || typeof proxy.toJs !== "function") return proxy;
   try{
     return proxy.toJs(options || {dict_converter:Object.fromEntries});
   }finally{
-    if(proxy && typeof proxy.destroy === "function") proxy.destroy();
+    if(typeof proxy.destroy === "function") proxy.destroy();
   }
 }
 const stageTitles = {

@@ -41,19 +41,21 @@ class GameRegressionTests(unittest.TestCase):
 
     def test_successful_flee_clears_combat_state(self):
         g = self.make_thief()
-        g._combat("Test Bandit", 40, 8, 2, 10, 10, "bear_choice")
+        g._combat("Test Bandit", 40, 8, 2, 10, 10, "bear_choice", retreat="helgen_choice")
 
         with patch("game.random.random", return_value=0.9):
             result = g.act("run")
 
-        self.assertEqual(g.s["stage"], "bear_choice")
+        # Fleeing returns to the scene before the fight, not forward in the story.
+        self.assertEqual(g.s["stage"], "helgen_choice")
         self.assertIsNone(g.s["enemy"])
         self.assertIsNone(g.s["after_combat"])
-        self.assertEqual(result["state"]["stage"], "bear_choice")
+        self.assertIsNone(g.s["retreat_to"])
+        self.assertEqual(result["state"]["stage"], "helgen_choice")
 
     def test_failed_flee_keeps_combat_state(self):
         g = self.make_thief()
-        g._combat("Test Bandit", 40, 8, 2, 10, 10, "bear_choice")
+        g._combat("Test Bandit", 40, 8, 2, 10, 10, "bear_choice", retreat="helgen_choice")
         starting_hp = g.s["hp"]
 
         with patch("game.random.random", return_value=0.1), \
