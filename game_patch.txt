@@ -1,0 +1,44 @@
+SKILLS & PERKS PATCH FOR game.py
+
+1. In _defaults() add:
+"skills": {
+    "One-Handed": 15,
+    "Destruction": 15,
+    "Sneak": 15,
+    "Speech": 15
+},
+"perk_points": 0,
+"perks": []
+
+2. Add Game.improve_skill():
+
+def improve_skill(self, skill, amount=1):
+    self.s['skills'][skill] += amount
+    if self.s['skills'][skill] % 10 == 0:
+        self.say(f"{skill} increased to {self.s['skills'][skill]}!")
+
+3. In _xp() level-up block add:
+self.s['perk_points'] += 1
+
+4. Class bonuses:
+Warrior => One-Handed = 25
+Mage => Destruction = 25
+Thief => Sneak = 25; Speech = 25
+
+5. Combat:
+attack => improve_skill('One-Handed')
+magic => improve_skill('Destruction')
+successful run => improve_skill('Sneak', 2)
+
+6. Merchant interactions:
+improve_skill('Speech')
+
+7. Add perk screen:
+Armsman (One-Handed 20)
+Pyromancer (Destruction 20)
+Shadowfoot (Sneak 20)
+
+8. Effects:
+Armsman => +5 weapon damage
+Pyromancer => +10 spell damage
+Shadowfoot => +20% escape chance
