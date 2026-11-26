@@ -24,18 +24,6 @@ const raceNotes = {
   "High Elf":"High Elves begin with greater magicka and spell power.",
   "Khajiit":"Khajiit begin with sharper attacks and a pouch of Skooma."
 };
-function portraitPath(race, cls){
-  const r = String(race||"Nord").toLowerCase().replace(/\s+/g,"_");
-  const c = String(cls||"Warrior").toLowerCase();
-  return `static/portraits/${r}_${c}.png`;
-}
-function updateSetupPreview(){
-  const race = $("race").value;
-  const cls = $("class").value;
-  $("setupPortrait").src = portraitPath(race, cls);
-  $("setupRaceClass").textContent = `${race} · ${cls}`;
-  $("raceNote").textContent = raceNotes[race] || "";
-}
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2200)}
 function appendLines(lines){
   const log=$("storyLog");
@@ -53,7 +41,6 @@ function render(data, append=true){
   $("location").textContent=(s.location||"Skyrim").toUpperCase();
   $("charName").textContent=s.name;
   $("charMeta").textContent=`${s.race} · ${s.character_class}`;
-  $("charPortrait").src = portraitPath(s.race, s.character_class);
   $("level").textContent=s.level;$("xp").textContent=s.xp;$("xpNeeded").textContent=s.xp_needed;
   $("xpBar").style.width=Math.min(100,100*s.xp/s.xp_needed)+"%";
   $("hpText").textContent=`${s.hp} / ${s.max_hp}`;
@@ -118,8 +105,7 @@ async function boot(){
     console.error(err);
   }
 }
-$("race").addEventListener("change",updateSetupPreview);
-$("class").addEventListener("change",updateSetupPreview);
+$("race").addEventListener("change",e=>$("raceNote").textContent=raceNotes[e.target.value]);
 $("beginBtn").addEventListener("click",()=>{
   if(!pyodide){toast("The Python engine is still loading.");return}
   const name=$("playerName").value.trim()||"Dragonborn";
@@ -129,8 +115,6 @@ $("beginBtn").addEventListener("click",()=>{
   $("setup").classList.add("hidden");$("game").classList.remove("hidden");
   $("storyLog").innerHTML="";handle(data);
 });
-// Initialize setup preview once the DOM is ready
-updateSetupPreview();
 $("saveBtn").addEventListener("click",()=>{
   if(!game)return;
   const saved=fromPython(game.export_state(),{});
