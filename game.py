@@ -15,6 +15,7 @@ class Game:
             "attack": 15, "spell": 10, "defense": 5, "gold": 50,
             "inventory": ["Sweetroll", "Healing Potion"], "spells": ["Flames"],
             "shouts": [], "companion": None, "location": "Helgen",
+            "discovered": ["Helgen"],
             "stormcloaks": False, "imperials": False, "dragonstone": False,
             "paarthurnax_killed": False, "archmage": False, "void_champion": False,
             "farengar_paid": False, "retreat_to": None,
@@ -54,13 +55,24 @@ class Game:
             "attack": s["attack"], "spell": s["spell"], "defense": s["defense"],
             "gold": s["gold"], "inventory": s["inventory"], "spells": s["spells"],
             "shouts": s["shouts"], "companion": s["companion"],
-            "location": s["location"], "quests": s["quests"],
+            "location": s["location"], "discovered": s.get("discovered", []),
+            "quests": s["quests"],
             "skills": s.get("skills", {}), "perk_points": s.get("perk_points", 0),
             "perks": s.get("perks", []),
             "enemy": s["enemy"], "ending_title": s.get("ending_title"),
             "game_over": s["stage"] == "game_over",
             "won": s["stage"] == "ending"
         }
+
+    def _discover(self, loc):
+        """Record that the player has visited a location (for travel menu + UI theme)."""
+        disc = self.s.setdefault("discovered", [])
+        if loc and loc not in disc:
+            disc.append(loc)
+
+    def _set_location(self, loc):
+        self.s["location"] = loc
+        self._discover(loc)
 
     def export_state(self):
         return json.dumps(self.s)
@@ -119,14 +131,14 @@ class Game:
         s = self.s
         s["stage"] = stage
         if stage == "bear_choice":
-            s["location"] = "Helgen Keep"
+            self._set_location("Helgen Keep")
             self.say("You descend into the tunnels beneath Helgen. A sleeping cave bear guards the exit.")
         elif stage == "riverwood":
-            s["location"] = "Riverwood"
+            self._set_location("Riverwood")
             self.say("You emerge beneath the cold sky. The road leads to Riverwood, a quiet logging village.",
                      "Locals whisper of dragon sightings and urge you to seek the Jarl of Whiterun.")
         elif stage == "whiterun":
-            s["location"] = "Whiterun"
+            self._set_location("Whiterun")
             self.say("You pass beneath the gates of Whiterun and climb to Dragonsreach.")
             if s["dragonstone"]:
                 if not s["farengar_paid"]:
@@ -142,7 +154,7 @@ class Game:
                 self.say("Farengar needs the Dragonstone from Bleak Falls Barrow before he can help.")
                 self._advance("barrow_intro")
         elif stage == "barrow_intro":
-            s["location"] = "Bleak Falls Barrow"
+            self._set_location("Bleak Falls Barrow")
         elif stage == "barrow_complete":
             s["dragonstone"] = True
             s["inventory"].extend(["Golden Claw", "Dragonstone"])
@@ -158,30 +170,36 @@ class Game:
             s["companion"] = "Lydia"
             self.say("You learn the shout Fus Ro Dah. Jarl Balgruuf names you Thane and assigns Lydia as your housecarl.")
             self._xp(150)
+            self._discover("Whiterun")
             self._advance("branching")
         elif stage == "branching":
-            s["location"] = "Skyrim"
+            self._set_location("Skyrim")
             self.say("The Greybeards summon you to High Hrothgar, but powerful guilds have noticed your deeds.")
         elif stage == "after_college":
             s["archmage"] = True
             s["quests"]["College of Winterhold"] = "Completed"
             s["spells"].append("Blizzard")
+            self._discover("College of Winterhold")
             self.say("The mages elect you Archmage of Winterhold. You learn Blizzard.")
             self._xp(120)
             self._advance("branching")
         elif stage == "after_brotherhood":
             s["quests"]["Dark Brotherhood"] = "Completed"
+            self._discover("Dark Brotherhood Sanctuary")
             if not s["void_champion"]:
                 self.say("You have destroyed the Dark Brotherhood leadership! You are a hero of the light.")
             self._advance("branching")
         elif stage == "paarthurnax":
+            self._set_location("High Hrothgar")
             self.say("At the summit of the Throat of the World, Paarthurnax reveals the path to Sovngarde.",
                      "Delphine demands that you kill the ancient dragon. The choice is yours.")
         elif stage == "sovngarde":
-            s["location"] = "Sovngarde"
+            self._set_location("Sovngarde")
             self.say("You pass through the portal into the glowing skies of Sovngarde.",
                      "Alduin, the World-Eater, descends upon the heroes of old!")
             self._combat("Alduin — World-Eater", 250, 35, 20, 500, 300, "ending")
+        elif stage == "travel":
+            self.say("The roads of Skyrim stretch before you. Where will you travel?")
         elif stage == "ending":
             self._ending()
         elif stage == "game_over":
@@ -241,6 +259,111 @@ class Game:
         opts = self.options()
         return {"lines": self.lines, "state": self.state(), "options": opts}
 
+    def _travel_options(self):
+        """Build destination list from story progress and discovered locations."""
+        s = self.s
+        current = s.get("location", "")
+        disc = set(s.get("discovered", []))
+        opts = []
+
+        # Riverwood is always available once the player has reached it.
+        if "Riverwood" in disc and current != "Riverwood":
+            opts.append({"id": "go_riverwood", "label": "Riverwood",
+                         "detail": "Quiet logging village on the White River"})
+
+        # Whiterun opens after the player has left Helgen (Riverwood reached).
+        if "Riverwood" in disc and current != "Whiterun":
+            opts.append({"id": "go_whiterun", "label": "Whiterun",
+                         "detail": "City of the plains · Dragonsreach"})
+
+        # Bleak Falls if the claw quest is active or already done.
+        claw = s["quests"].get("Golden Claw", "Not started")
+        if claw != "Not started" and current != "Bleak Falls Barrow":
+            opts.append({"id": "go_barrow", "label": "Bleak Falls Barrow",
+                         "detail": "Ancient Nordic ruin in the mountains"})
+
+        # Open world hubs after the dragon fight (branching unlocked).
+        open_world = "Skyrim" in disc or s.get("companion") == "Lydia" or s["quests"].get("Main Quest") == "Completed"
+        if open_world:
+            if current != "College of Winterhold" and s["quests"].get("College of Winterhold") != "Not started":
+                opts.append({"id": "go_college", "label": "College of Winterhold",
+                             "detail": "Arcane citadel of the north"})
+            if current != "High Hrothgar" and ("High Hrothgar" in disc or open_world):
+                opts.append({"id": "go_hrothgar", "label": "High Hrothgar",
+                             "detail": "Monastery of the Greybeards"})
+            if "Dark Brotherhood Sanctuary" in disc and current != "Dark Brotherhood Sanctuary":
+                opts.append({"id": "go_sanctuary", "label": "Dark Brotherhood Sanctuary",
+                             "detail": "Hidden refuge of the Night Mother"})
+
+        # Sovngarde only if already visited (story takes you there).
+        if "Sovngarde" in disc and current != "Sovngarde":
+            opts.append({"id": "go_sovngarde", "label": "Sovngarde",
+                         "detail": "Hall of the honored dead"})
+
+        if not opts:
+            opts.append({"id": "travel_none", "label": "No new roads yet",
+                         "detail": "Continue the main path to open destinations"})
+        opts.append({"id": "travel_back", "label": "Stay where you are",
+                     "detail": "Return without traveling"})
+        return opts
+
+    def _handle_travel(self, action):
+        """Process a travel-menu choice and move the player."""
+        s = self.s
+        back = s.pop("travel_return", "riverwood")
+
+        if action in ("travel_back", "travel_none"):
+            self.say("You remain where you stand.")
+            s["stage"] = back
+            return
+
+        if action == "go_riverwood":
+            self.say("You follow the forest path back to the quiet village of Riverwood.")
+            self._advance("riverwood")
+        elif action == "go_whiterun":
+            self.say("The road climbs through the plains toward the gates of Whiterun.")
+            # If the early main quest is still open, running Whiterun continues it.
+            # After the dragon fight the city is a safe hub that returns to branching.
+            if s.get("companion") == "Lydia" or s["quests"].get("Main Quest") == "Completed":
+                self._set_location("Whiterun")
+                s["stage"] = "branching"
+                self.say("Whiterun's markets bustle. Lydia waits near the Bannered Mare if you need her.")
+            else:
+                self._advance("whiterun")
+        elif action == "go_barrow":
+            self.say("You climb the frozen trail toward Bleak Falls Barrow.")
+            if s["quests"].get("Golden Claw") == "Completed":
+                self._set_location("Bleak Falls Barrow")
+                s["stage"] = "riverwood"
+                self.say("The barrow is silent now. The Dragonstone and claw are already yours.")
+            else:
+                self._advance("barrow_intro")
+        elif action == "go_college":
+            self.say("Northward winds guide you to the College of Winterhold.")
+            self._set_location("College of Winterhold")
+            s["stage"] = "branching"
+            self.say("Mages study under the cold aurora. The Eye of Magnus still hums if unfinished business remains.")
+        elif action == "go_hrothgar":
+            self.say("You ascend the seven thousand steps once more to High Hrothgar.")
+            self._set_location("High Hrothgar")
+            # If Paarthurnax choice not yet made, offer the summit encounter.
+            if not s.get("paarthurnax_killed") and s["quests"].get("Main Quest") != "Completed":
+                self._advance("paarthurnax")
+            else:
+                s["stage"] = "branching"
+                self.say("The Greybeards meditate in silence. The path to Sovngarde is known to you.")
+        elif action == "go_sanctuary":
+            self.say("You slip through the shadows to the Dark Brotherhood Sanctuary.")
+            self._set_location("Dark Brotherhood Sanctuary")
+            s["stage"] = "branching"
+            self.say("Black doors and whispered contracts. The family remembers your deeds.")
+        elif action == "go_sovngarde":
+            self.say("The portal opens once more onto the golden mist of Sovngarde.")
+            self._advance("sovngarde")
+        else:
+            self.say("That road is closed to you.")
+            s["stage"] = back
+
     def options(self):
         stage = self.s["stage"]
         if stage == "intro": return []
@@ -254,7 +377,9 @@ class Game:
             opts = [
                 {"id":"shop","label":"Visit Alvor's blacksmith","detail":"Buy equipment or sell trinkets"},
                 {"id":"trader","label":"Speak with Lucan Valerius","detail":"The Golden Claw quest"},
+                # Direct main-path travel (also keeps regression tests / older saves working)
                 {"id":"travel","label":"Travel to Whiterun","detail":"Continue the main story"},
+                {"id":"open_travel","label":"Travel the roads of Skyrim","detail":"Choose any unlocked destination"},
                 {"id":"stats","label":"Review character status","detail":"Inspect your character"}]
             if self.s.get("perk_points", 0) > 0:
                 opts.append({"id":"perks","label":"Spend perk point","detail":f"{self.s['perk_points']} available"})
@@ -268,6 +393,8 @@ class Game:
             {"id":"barrow","label":"Retrieve the Golden Claw","detail":"Explore Bleak Falls Barrow"},
             {"id":"decline","label":"Decline the offer","detail":"Return to the village"}]
         if stage == "barrow_intro": return [{"id":"enter_barrow","label":"Enter Bleak Falls Barrow","detail":"Face the ancient ruin"}]
+        if stage == "travel":
+            return self._travel_options()
         if stage == "branching":
             q = self.s["quests"]
             opts = [{"id":"main","label":"Path of the Dragonborn","detail":"High Hrothgar and Alduin"}]
@@ -275,6 +402,7 @@ class Game:
                 opts.append({"id":"college","label":"Join the College of Winterhold","detail":"The Eye of Magnus"})
             if q["Dark Brotherhood"] != "Completed":
                 opts.append({"id":"brotherhood","label":"Join the Dark Brotherhood","detail":"A contract in an abandoned shack"})
+            opts.append({"id":"open_travel","label":"Travel the roads of Skyrim","detail":"Choose a destination"})
             opts.append({"id":"stats","label":"Review character status","detail":"Inspect your character"})
             if self.s.get("perk_points", 0) > 0:
                 opts.append({"id":"perks","label":"Spend perk point","detail":f"{self.s['perk_points']} available"})
@@ -377,9 +505,16 @@ class Game:
                 else:
                     self.say("Lucan explains that thieves took his antique Golden Claw to Bleak Falls Barrow.")
                     self._advance("trader")
+            elif action == "open_travel":
+                s["travel_return"] = "riverwood"
+                self._advance("travel")
             elif action == "travel":
+                # Legacy single-destination action (older saves / tests)
                 self.say("You pack your gear and follow the road toward Whiterun.")
                 self._advance("whiterun")
+        elif stage == "travel":
+            self._handle_travel(action)
+            return self.result()
         elif stage == "shop":
             if action == "blade":
                 if s["gold"] >= 50:
@@ -451,12 +586,17 @@ class Game:
             elif action == "college":
                 self.say("At the College of Winterhold, the Eye of Magnus pulses with dangerous power. Ancano's magic must be stopped.")
                 s["quests"]["College of Winterhold"] = "In progress"
+                self._set_location("College of Winterhold")
                 self._combat("Magical Anomaly", 80, 18, 12, 50, 80, "after_college", retreat="branching")
             elif action == "brotherhood":
                 self.say("You wake in an abandoned shack. Astrid watches from the shadows.",
                          "“Kill one of these captives, and you may join the family.”")
                 s["quests"]["Dark Brotherhood"] = "In progress"
+                self._set_location("Dark Brotherhood Sanctuary")
                 self._advance("brotherhood_choice")
+            elif action == "open_travel":
+                s["travel_return"] = "branching"
+                self._advance("travel")
         elif stage == "brotherhood_choice":
             if action in ("merchant", "mercenary"):
                 victim = "fearful merchant" if action == "merchant" else "arrogant mercenary"

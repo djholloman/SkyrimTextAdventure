@@ -47,6 +47,14 @@ Four skills track progress: **One-Handed**, **Destruction**, **Sneak**, and **Sp
 
 Skills and unlocked perks appear in the sidebar. Spend perk points from Riverwood or the branching path menu.
 
+## Travel & location atmosphere
+
+From **Riverwood** and the open-world **branching** hub you can:
+
+- **Travel to Whiterun** — direct main-story route
+- **Travel the roads of Skyrim** — open a destination list of unlocked locations
+
+Locations unlock as you progress (Riverwood, Whiterun, Bleak Falls Barrow, College of Winterhold, High Hrothgar, Dark Brotherhood Sanctuary, Sovngarde, and more). Each destination updates the page background to match that region’s mood — ash and fire for Helgen, forest greens for Riverwood, golden plains for Whiterun, icy blues for Winterhold and the barrow, aurora light for High Hrothgar, shadow and blood for the Sanctuary, and golden mist for Sovngarde.
 
 ## QA fixes and regression tests
 
