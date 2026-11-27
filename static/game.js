@@ -17,17 +17,43 @@ const stageTitles = {
   riverwood:"Riverwood", shop:"Alvor's Blacksmith", trader:"The Golden Claw",
   barrow_intro:"Bleak Falls Barrow", combat:"Battle", branching:"Choose Your Destiny",
   brotherhood_choice:"The Abandoned Shack", paarthurnax:"The Throat of the World",
-  sovngarde:"Sovngarde", ending:"The Saga Is Written", game_over:"Your Saga Ends"
+  sovngarde:"Sovngarde", ending:"The Saga Is Written", game_over:"Your Saga Ends",
+  perk_menu:"Perk Selection", travel:"Roads of Skyrim"
 };
 const raceNotes = {
   "Nord":"Nords begin with greater health and defense.",
   "High Elf":"High Elves begin with greater magicka and spell power.",
   "Khajiit":"Khajiit begin with sharper attacks and a pouch of Skooma."
 };
+
+/** Map in-game location names to CSS data-loc tokens for themed backgrounds. */
+const locationTheme = {
+  "Helgen": "helgen",
+  "Helgen Keep": "helgen",
+  "Riverwood": "riverwood",
+  "Whiterun": "whiterun",
+  "Bleak Falls Barrow": "barrow",
+  "Skyrim": "skyrim",
+  "College of Winterhold": "winterhold",
+  "High Hrothgar": "hrothgar",
+  "Dark Brotherhood Sanctuary": "brotherhood",
+  "Sovngarde": "sovngarde"
+};
+
+function applyLocationTheme(location){
+  const token = locationTheme[location] || "skyrim";
+  document.body.dataset.loc = token;
+  // Soft transition cue
+  document.body.classList.remove("loc-fade");
+  // Force reflow so the class can re-trigger if needed
+  void document.body.offsetWidth;
+  document.body.classList.add("loc-fade");
+}
+
 function portraitPath(race, cls){
   const r = String(race||"Nord").toLowerCase().replace(/\s+/g,"_");
   const c = String(cls||"Warrior").toLowerCase();
-  return `static/portraits/${r}_${c}.png`;
+  return `static/${r}_${c}.png`;
 }
 function updateSetupPreview(){
   const race = $("race").value;
@@ -51,6 +77,7 @@ function render(data, append=true){
   if(append)appendLines(data.lines);
   $("sceneTitle").textContent=stageTitles[s.stage]||"The Adventure";
   $("location").textContent=(s.location||"Skyrim").toUpperCase();
+  applyLocationTheme(s.location || "Skyrim");
   $("charName").textContent=s.name;
   $("charMeta").textContent=`${s.race} · ${s.character_class}`;
   $("charPortrait").src = portraitPath(s.race, s.character_class);
@@ -62,6 +89,19 @@ function render(data, append=true){
   $("manaBar").style.width=Math.max(0,100*s.mana/s.max_mana)+"%";
   $("attack").textContent=s.attack;$("spell").textContent=s.spell;
   $("defense").textContent=s.defense;$("gold").textContent=s.gold;
+  // Skills & perks
+  const skills=s.skills||{};
+  if($("skillOneHanded")) $("skillOneHanded").textContent=skills["One-Handed"]??15;
+  if($("skillDestruction")) $("skillDestruction").textContent=skills["Destruction"]??15;
+  if($("skillSneak")) $("skillSneak").textContent=skills["Sneak"]??15;
+  if($("skillSpeech")) $("skillSpeech").textContent=skills["Speech"]??15;
+  const pp=s.perk_points||0;
+  const badge=$("perkPointsBadge");
+  if(badge){
+    if(pp>0){badge.textContent=pp;badge.classList.remove("hidden");}
+    else badge.classList.add("hidden");
+  }
+  if($("perkList")) $("perkList").textContent=(s.perks&&s.perks.length)?s.perks.join(" · "):"None";
   $("inventoryList").innerHTML="";
   (s.inventory||[]).forEach(item=>{const li=document.createElement("li");li.textContent=item;$("inventoryList").appendChild(li)});
   $("magicList").textContent=[...(s.spells||[]),...(s.shouts||[])].join(" · ")||"None";
@@ -94,6 +134,7 @@ function act(action){
     game=pyodide.runPython("game.Game()");
     $("game").classList.add("hidden");$("setup").classList.remove("hidden");
     $("storyLog").innerHTML="";$("playerName").value="Dragonborn";
+    document.body.dataset.loc = "skyrim";
     toast("A new saga awaits.");return;
   }
   const data=fromPython(game.act(action));handle(data);
