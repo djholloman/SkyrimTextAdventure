@@ -19,7 +19,7 @@ This edition runs the Python game engine in the visitor's browser using Pyodide.
 - `game.py` — Python game engine, executed by Pyodide
 - `static/style.css` — Nordic-inspired responsive RPG styling
 - `static/game.js` — browser controls and Pyodide bridge
-- `static/*_*.png` — character badge images for each race × class combination (e.g. `nord_warrior.png`)
+- `static/portraits/` — character badge images for each race × class combination (Nord / High Elf / Khajiit × Warrior / Mage / Thief)
 
 ## Notes
 
@@ -29,32 +29,6 @@ This edition runs the Python game engine in the visitor's browser using Pyodide.
 - This is an adaptation of the supplied console game into a browser-choice interface. The original game used synchronous `input()`/`print()` loops; the browser edition uses discrete Python game actions and choice buttons.
 - The game is a fan-made text adventure and is not affiliated with or endorsed by Bethesda Softworks.
 
-## Character badges
-
-The sidebar and character-creation screen show a portrait badge for each race × class combination (Nord / High Elf / Khajiit × Warrior / Mage / Thief). Images live directly in `static/` (for example `static/nord_warrior.png`).
-
-## Skills & perks
-
-Four skills track progress: **One-Handed**, **Destruction**, **Sneak**, and **Speech**.
-
-- Class starting bonuses: Warrior → One-Handed 25 · Mage → Destruction 25 · Thief → Sneak 25 & Speech 25
-- Weapon attacks improve One-Handed; spells improve Destruction; successful escapes and sneaking improve Sneak; shop deals improve Speech
-- Each level-up grants **1 perk point**
-- Perks (require skill 20 + a perk point):
-  - **Armsman** — +5 weapon damage
-  - **Pyromancer** — +10 spell damage
-  - **Shadowfoot** — +20% escape chance
-
-Skills and unlocked perks appear in the sidebar. Spend perk points from Riverwood or the branching path menu.
-
-## Travel & location atmosphere
-
-From **Riverwood** and the open-world **branching** hub you can:
-
-- **Travel to Whiterun** — direct main-story route
-- **Travel the roads of Skyrim** — open a destination list of unlocked locations
-
-Locations unlock as you progress (Riverwood, Whiterun, Bleak Falls Barrow, College of Winterhold, High Hrothgar, Dark Brotherhood Sanctuary, Sovngarde, and more). Each destination updates the page background to match that region’s mood — ash and fire for Helgen, forest greens for Riverwood, golden plains for Whiterun, icy blues for Winterhold and the barrow, aurora light for High Hrothgar, shadow and blood for the Sanctuary, and golden mist for Sovngarde.
 
 ## QA fixes and regression tests
 

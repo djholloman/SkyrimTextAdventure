@@ -19,14 +19,6 @@ class Game:
             "paarthurnax_killed": False, "archmage": False, "void_champion": False,
             "farengar_paid": False, "retreat_to": None,
             "enemy": None, "after_combat": None, "log": [],
-            "skills": {
-                "One-Handed": 15,
-                "Destruction": 15,
-                "Sneak": 15,
-                "Speech": 15,
-            },
-            "perk_points": 0,
-            "perks": [],
             "quests": {"Golden Claw": "Not started", "College of Winterhold": "Not started",
                        "Dark Brotherhood": "Not started", "Main Quest": "In progress"}
         }
@@ -55,8 +47,6 @@ class Game:
             "gold": s["gold"], "inventory": s["inventory"], "spells": s["spells"],
             "shouts": s["shouts"], "companion": s["companion"],
             "location": s["location"], "quests": s["quests"],
-            "skills": s.get("skills", {}), "perk_points": s.get("perk_points", 0),
-            "perks": s.get("perks", []),
             "enemy": s["enemy"], "ending_title": s.get("ending_title"),
             "game_over": s["stage"] == "game_over",
             "won": s["stage"] == "ending"
@@ -64,19 +54,6 @@ class Game:
 
     def export_state(self):
         return json.dumps(self.s)
-
-    def improve_skill(self, skill, amount=1):
-        skills = self.s.setdefault("skills", {
-            "One-Handed": 15, "Destruction": 15, "Sneak": 15, "Speech": 15
-        })
-        if skill not in skills:
-            return
-        prev = skills[skill]
-        skills[skill] = min(100, skills[skill] + amount)
-        # Announce every 10-point threshold crossed
-        for threshold in range((prev // 10 + 1) * 10, skills[skill] + 1, 10):
-            self.say(f"{skill} increased to {skills[skill]}!")
-            break  # one message per call is enough
 
     def _xp(self, amount):
         self.say(f"You gained {amount} experience.")
@@ -92,9 +69,7 @@ class Game:
             self.s["attack"] += 5
             self.s["spell"] += 4
             self.s["defense"] += 2
-            self.s["perk_points"] = self.s.get("perk_points", 0) + 1
-            self.say(f"LEVEL UP! You are now level {self.s['level']}. Your health, mana, and combat power increase.",
-                     f"You gained a perk point! ({self.s['perk_points']} available)")
+            self.say(f"LEVEL UP! You are now level {self.s['level']}. Your health, mana, and combat power increase.")
 
     def _combat(self, name, hp, attack, defense, gold, xp, after, retreat=None):
         self.s["enemy"] = {"name": name, "hp": hp, "max_hp": hp, "attack": attack,
@@ -227,14 +202,10 @@ class Game:
             s["attack"] += 8; s["inventory"].append("Skooma")
         if character_class == "Warrior":
             s["attack"] += 5; s["inventory"].append("Iron Sword")
-            s["skills"]["One-Handed"] = 25
         elif character_class == "Mage":
             s["spells"].append("Spark"); s["inventory"].append("Staff of Sparks")
-            s["skills"]["Destruction"] = 25
         else:
             s["inventory"].append("Steel Dagger"); s["gold"] += 50
-            s["skills"]["Sneak"] = 25
-            s["skills"]["Speech"] = 25
         return self.result()
 
     def result(self):
@@ -250,15 +221,11 @@ class Game:
         if stage == "bear_choice": return [
             {"id":"sneak","label":"Creep past the sleeping bear","detail":"Avoid a dangerous fight"},
             {"id":"bear","label":"Ambush the cave bear","detail":"Risk combat for experience"}]
-        if stage == "riverwood":
-            opts = [
-                {"id":"shop","label":"Visit Alvor's blacksmith","detail":"Buy equipment or sell trinkets"},
-                {"id":"trader","label":"Speak with Lucan Valerius","detail":"The Golden Claw quest"},
-                {"id":"travel","label":"Travel to Whiterun","detail":"Continue the main story"},
-                {"id":"stats","label":"Review character status","detail":"Inspect your character"}]
-            if self.s.get("perk_points", 0) > 0:
-                opts.append({"id":"perks","label":"Spend perk point","detail":f"{self.s['perk_points']} available"})
-            return opts
+        if stage == "riverwood": return [
+            {"id":"shop","label":"Visit Alvor's blacksmith","detail":"Buy equipment or sell trinkets"},
+            {"id":"trader","label":"Speak with Lucan Valerius","detail":"The Golden Claw quest"},
+            {"id":"travel","label":"Travel to Whiterun","detail":"Continue the main story"},
+            {"id":"stats","label":"Review character status","detail":"Inspect your character"}]
         if stage == "shop": return [
             {"id":"blade","label":"Buy Steel Blade — 50 gold","detail":"+10 attack"},
             {"id":"armor","label":"Buy Iron Armor — 40 gold","detail":"+5 defense"},
@@ -276,22 +243,6 @@ class Game:
             if q["Dark Brotherhood"] != "Completed":
                 opts.append({"id":"brotherhood","label":"Join the Dark Brotherhood","detail":"A contract in an abandoned shack"})
             opts.append({"id":"stats","label":"Review character status","detail":"Inspect your character"})
-            if self.s.get("perk_points", 0) > 0:
-                opts.append({"id":"perks","label":"Spend perk point","detail":f"{self.s['perk_points']} available"})
-            return opts
-        if stage == "perk_menu":
-            skills = self.s.get("skills", {})
-            owned = set(self.s.get("perks", []))
-            opts = []
-            if "Armsman" not in owned and skills.get("One-Handed", 0) >= 20:
-                opts.append({"id":"perk_armsman","label":"Armsman","detail":"One-Handed 20 · +5 weapon damage"})
-            if "Pyromancer" not in owned and skills.get("Destruction", 0) >= 20:
-                opts.append({"id":"perk_pyromancer","label":"Pyromancer","detail":"Destruction 20 · +10 spell damage"})
-            if "Shadowfoot" not in owned and skills.get("Sneak", 0) >= 20:
-                opts.append({"id":"perk_shadowfoot","label":"Shadowfoot","detail":"Sneak 20 · +20% escape chance"})
-            if not opts:
-                opts.append({"id":"perk_none","label":"No perks available yet","detail":"Raise skills to 20 to unlock perks"})
-            opts.append({"id":"perk_back","label":"Return","detail":"Leave the perk menu"})
             return opts
         if stage == "brotherhood_choice": return [
             {"id":"merchant","label":"Kill the fearful merchant","detail":"Accept Astrid's test"},
@@ -322,25 +273,12 @@ class Game:
             self.say("A new saga begins. The cart rolls toward Helgen.")
             return self.result()
         if action == "stats":
-            skills = s.get("skills", {})
-            skill_line = " · ".join(f"{k} {v}" for k, v in skills.items())
-            perks = s.get("perks", [])
             self.say(f"{s['name']} the {s['race']} {s['character_class']} — Level {s['level']}",
                      f"Health {s['hp']}/{s['max_hp']} · Magicka {s['mana']}/{s['max_mana']}",
                      f"Attack {s['attack']} · Spell {s['spell']} · Defense {s['defense']} · Gold {s['gold']} Septims",
-                     f"Skills: {skill_line}",
-                     f"Perk points: {s.get('perk_points', 0)} · Perks: {', '.join(perks) if perks else 'None'}",
                      "Inventory: " + (", ".join(s["inventory"]) if s["inventory"] else "Empty"),
                      "Spells: " + (", ".join(s["spells"]) if s["spells"] else "None"),
                      "Shouts: " + (", ".join(s["shouts"]) if s["shouts"] else "None"))
-            return self.result()
-        if action == "perks":
-            if s.get("perk_points", 0) <= 0:
-                self.say("You have no perk points to spend.")
-                return self.result()
-            s["perk_return"] = stage  # remember where to go back
-            s["stage"] = "perk_menu"
-            self.say("Choose a perk to unlock. Requirements must be met.")
             return self.result()
 
         # Enforce the rules in the engine, not just the UI: only actions currently on
@@ -364,7 +302,6 @@ class Game:
                 self._combat("Cave Bear", 65, 14, 4, 10, 40, "riverwood", retreat="bear_choice")
             else:
                 self.say("You hold your breath and slip past the sleeping bear.")
-                self.improve_skill("Sneak", 2)
                 self._advance("riverwood")
                 self._xp(50)
         elif stage == "riverwood":
@@ -385,13 +322,11 @@ class Game:
                 if s["gold"] >= 50:
                     s["gold"] -= 50; s["attack"] += 10; s["inventory"].append("Steel Blade")
                     self.say("You purchase a Steel Blade. Attack increased.")
-                    self.improve_skill("Speech")
                 else: self.say("You don't have enough Septims.")
             elif action == "armor":
                 if s["gold"] >= 40:
                     s["gold"] -= 40; s["defense"] += 5; s["inventory"].append("Iron Armor")
                     self.say("You purchase Iron Armor. Defense increased.")
-                    self.improve_skill("Speech")
                 else: self.say("You don't have enough Septims.")
             elif action == "sell":
                 # The player must actually own the item being sold. Every character
@@ -400,37 +335,10 @@ class Game:
                     s["inventory"].remove("Sweetroll")
                     s["gold"] += 5
                     self.say("You sell your Sweetroll for 5 Septims.")
-                    self.improve_skill("Speech")
                 else:
                     self.say("You have nothing to sell.")
             elif action == "back":
                 self._advance("riverwood")
-        elif stage == "perk_menu":
-            owned = s.setdefault("perks", [])
-            skills = s.get("skills", {})
-            if action == "perk_armsman" and "Armsman" not in owned and skills.get("One-Handed", 0) >= 20 and s.get("perk_points", 0) > 0:
-                owned.append("Armsman")
-                s["perk_points"] -= 1
-                self.say("You unlock Armsman. Your weapon strikes hit harder (+5 damage).")
-            elif action == "perk_pyromancer" and "Pyromancer" not in owned and skills.get("Destruction", 0) >= 20 and s.get("perk_points", 0) > 0:
-                owned.append("Pyromancer")
-                s["perk_points"] -= 1
-                self.say("You unlock Pyromancer. Your destructive spells burn hotter (+10 damage).")
-            elif action == "perk_shadowfoot" and "Shadowfoot" not in owned and skills.get("Sneak", 0) >= 20 and s.get("perk_points", 0) > 0:
-                owned.append("Shadowfoot")
-                s["perk_points"] -= 1
-                self.say("You unlock Shadowfoot. You are harder to pin down when fleeing (+20% escape chance).")
-            elif action == "perk_none":
-                self.say("Raise your skills to 20 to unlock new perks.")
-            elif action == "perk_back":
-                pass
-            else:
-                self.say("That perk is not available.")
-                return self.result()
-            # Return to previous stage
-            back = s.pop("perk_return", "riverwood")
-            s["stage"] = back
-            return self.result()
         elif stage == "trader":
             if action == "barrow":
                 self.say("You accept Lucan's request and climb the frozen steps to Bleak Falls Barrow.")
@@ -479,23 +387,18 @@ class Game:
             self._advance("sovngarde")
         elif stage == "combat":
             e = s["enemy"]
-            perks = set(s.get("perks", []))
             if action == "attack":
-                bonus = 5 if "Armsman" in perks else 0
-                dmg = max(5, s["attack"] + bonus + random.randint(-3, 5) - e["defense"])
+                dmg = max(5, s["attack"] + random.randint(-3, 5) - e["defense"])
                 e["hp"] -= dmg
                 self.say(f"You strike {e['name']} for {dmg} damage.")
-                self.improve_skill("One-Handed")
             elif action == "magic":
                 if s["mana"] < 15:
                     self.say("Not enough magicka. Choose another action.")
                     return self.result()
                 s["mana"] -= 15
-                bonus = 10 if "Pyromancer" in perks else 0
-                dmg = max(8, s["spell"] + bonus + random.randint(2, 8))
+                dmg = max(8, s["spell"] + random.randint(2, 8))
                 e["hp"] -= dmg
                 self.say(f"Your spell hits {e['name']} for {dmg} damage.")
-                self.improve_skill("Destruction")
             elif action == "shout":
                 if "Fus Ro Dah" not in s["shouts"]:
                     self.say("You have not unlocked Fus Ro Dah yet.")
@@ -517,11 +420,8 @@ class Game:
                 if not s.get("retreat_to"):
                     self.say("There is no escape from this fight!")
                     return self.result()
-                # Original base success is 60% (random > 0.4). Shadowfoot adds 20%.
-                fail_threshold = 0.4 - (0.2 if "Shadowfoot" in perks else 0)
-                if random.random() > fail_threshold:
+                if random.random() > .4:
                     self.say("You escape the battle and retreat.")
-                    self.improve_skill("Sneak", 2)
                     retreat_stage = s["retreat_to"]
                     # Clear the encounter before changing scenes so a retreat
                     # cannot leave a defeated/escaped enemy in the saved state.
